@@ -1,0 +1,16 @@
+# Dependencies and generated build files
+node_modules/
+main.js
+*.map
+dist/
+coverage/
+
+# Source archive and packaging temporary directory
+src.zip
+.pack-src.*/
+
+# Local editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+*.log

@@ -1,0 +1,10 @@
+{
+  "id": "worklog-migrate",
+  "name": "Worklog Migrate",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Move unfinished tasks to today's monthly work log while retaining historical notes.",
+  "author": "Alvin Li",
+  "authorUrl": "https://github.com/alvinli1991",
+  "isDesktopOnly": false
+}
