@@ -1,6 +1,6 @@
 {
   "name": "obsidian-worklog-migrate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Move unfinished Obsidian Tasks between monthly work logs",
   "license": "MIT",
@@ -15,14 +15,21 @@
   "scripts": {
     "build": "node esbuild.config.mjs production",
     "dev": "node esbuild.config.mjs",
+    "lint": "eslint src",
     "test": "tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.0.0",
     "esbuild": "^0.25.0",
+    "eslint": "^10.13.0",
+    "eslint-plugin-obsidianmd": "^0.4.2",
+    "globals": "^17.13.0",
+    "jiti": "^2.7.0",
     "obsidian": "^1.8.0",
     "tsx": "^4.20.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.71.2"
   }
 }

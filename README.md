@@ -35,6 +35,7 @@ Regular-content deduplication compares complete text blocks. If you manually edi
 
 ```sh
 npm install
+npm run lint
 npm test
 npm run typecheck
 npm run build

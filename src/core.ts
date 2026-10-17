@@ -71,7 +71,6 @@ function validDate(value: string): boolean {
 function dateFromHeading(title: string, path: string): string {
   const filename = path.split('/').pop()!;
   const year = filename.slice(0, 4);
-  const month = filename.slice(4, 6);
   const short = SHORT_DATE.exec(title);
   const date = short ? `${year}-${short[1]}-${short[2]}` : title;
   if (!validDate(date)) throw new UnsafeMarkdownError(`${path} 含无效日期标题：${title}`);
@@ -216,7 +215,7 @@ function renderDocument(doc: Document): string {
 }
 
 function parseTasks(body: string[]): TaskBody {
-  const owner: Array<Task | undefined> = new Array(body.length);
+  const owner: Array<Task | undefined> = Array.from({ length: body.length }, () => undefined);
   const roots: Task[] = [];
   const stack: Task[] = [];
   let fence: { char: string; length: number } | undefined;
@@ -342,9 +341,9 @@ function appendTask(section: Section, lines: string[], sourceGap: number, joinsP
   if (!taskLines.length) return;
   if (joinsPreviousTask) {
     while (section.body.length && !section.body.at(-1)!.trim()) section.body.pop();
-    section.body.push(...Array(sourceGap).fill(''));
+    section.body.push(...Array.from({ length: sourceGap }, () => ''));
   } else if (!section.body.length) {
-    section.body.push(...Array(sourceGap).fill(''));
+    section.body.push(...Array.from({ length: sourceGap }, () => ''));
   }
   section.body.push(...taskLines);
 }
@@ -416,7 +415,7 @@ function mergeTask(target: Section, sourceBody: string[], node: Task, parentPath
   const lines = subtreeLines(node, sourceBody, desiredIndent, false);
   if (!lines.length) return 0;
   if (parent) {
-    target.body.splice(lastOwnedContentLine(parent, target.body) + 1, 0, ...Array(blankLinesBefore(sourceBody, node.line)).fill(''), ...lines);
+    target.body.splice(lastOwnedContentLine(parent, target.body) + 1, 0, ...Array.from({ length: blankLinesBefore(sourceBody, node.line) }, () => ''), ...lines);
   } else {
     appendTask(target, lines, blankLinesBefore(sourceBody, node.line), joinsPreviousTask);
   }

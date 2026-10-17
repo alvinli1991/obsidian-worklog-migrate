@@ -12,6 +12,7 @@ files=(
   package-lock.json
   tsconfig.json
   esbuild.config.mjs
+  eslint.config.mts
   manifest.json
   versions.json
   pack-src.sh

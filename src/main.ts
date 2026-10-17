@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, TFolder, getLanguage, normalizePath } from 'obsidian';
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, SettingDefinitionItem, TFile, TFolder, getLanguage, normalizePath } from 'obsidian';
 import { MigrationOptions, planMigration } from './core';
 
 interface Settings extends MigrationOptions {
@@ -13,6 +13,21 @@ const DEFAULT_SETTINGS: Settings = {
   historyRecords: false,
   preview: false
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function parseSettings(value: unknown): Settings {
+  if (!isRecord(value)) return { ...DEFAULT_SETTINGS };
+  return {
+    worklogDirectory: typeof value.worklogDirectory === 'string' ? value.worklogDirectory : DEFAULT_SETTINGS.worklogDirectory,
+    copyContent: typeof value.copyContent === 'boolean' ? value.copyContent : DEFAULT_SETTINGS.copyContent,
+    cleanEmptyHeadings: typeof value.cleanEmptyHeadings === 'boolean' ? value.cleanEmptyHeadings : DEFAULT_SETTINGS.cleanEmptyHeadings,
+    historyRecords: typeof value.historyRecords === 'boolean' ? value.historyRecords : DEFAULT_SETTINGS.historyRecords,
+    preview: typeof value.preview === 'boolean' ? value.preview : DEFAULT_SETTINGS.preview
+  };
+}
 
 function localDate(): string {
   const date = new Date();
@@ -58,7 +73,8 @@ export default class WorklogMigratePlugin extends Plugin {
   private running = false;
 
   async onload(): Promise<void> {
-    this.settings = { ...DEFAULT_SETTINGS, ...(await this.loadData()) };
+    const savedSettings: unknown = await this.loadData();
+    this.settings = parseSettings(savedSettings);
     const commandName = /^zh(?:[-_]|$)/i.test(getLanguage()) ? '迁移待办' : 'Migrate TODOs';
     this.addCommand({
       id: 'migrate-unfinished-todos-to-today',
@@ -66,10 +82,6 @@ export default class WorklogMigratePlugin extends Plugin {
       callback: () => { void this.migrate(); }
     });
     this.addSettingTab(new WorklogSettingTab(this.app, this));
-  }
-
-  async saveSettings(): Promise<void> {
-    await this.saveData(this.settings);
   }
 
   private async migrate(): Promise<void> {
@@ -135,26 +147,40 @@ export default class WorklogMigratePlugin extends Plugin {
 }
 
 class WorklogSettingTab extends PluginSettingTab {
-  constructor(app: App, private plugin: WorklogMigratePlugin) { super(app, plugin); }
+  plugin: WorklogMigratePlugin;
 
-  display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    new Setting(containerEl).setName('工作日志目录').setDesc('Vault 内存放 YYYYMM.md 月度文件的目录。仅处理当月文件。')
-      .addText((text) => text.setPlaceholder('Worklog').setValue(this.plugin.settings.worklogDirectory).onChange(async (value) => {
-        this.plugin.settings.worklogDirectory = value;
-        await this.plugin.saveSettings();
-      }));
-    const toggle = (name: string, description: string, key: keyof Pick<Settings, 'copyContent' | 'cleanEmptyHeadings' | 'historyRecords' | 'preview'>): void => {
-      new Setting(containerEl).setName(name).setDesc(description)
-        .addToggle((control) => control.setValue(this.plugin.settings[key]).onChange(async (value) => {
-          this.plugin.settings[key] = value;
-          await this.plugin.saveSettings();
-        }));
-    };
-    toggle('复制普通 Markdown 内容', '复制有未完成任务的标题分支中的普通内容。', 'copyContent');
-    toggle('清理已迁项目', '删除内容已复制且不含需保留任务的历史二级标题；日期标题保留。', 'cleanEmptyHeadings');
-    toggle('保留顺延记录', '在历史标题下添加普通文本顺延记录。', 'historyRecords');
-    toggle('迁移前预览', '写入前显示任务数量和受影响文件，并等待确认。', 'preview');
+  constructor(app: App, plugin: WorklogMigratePlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  getSettingDefinitions(): SettingDefinitionItem<keyof Settings>[] {
+    return [
+      {
+        name: '工作日志目录',
+        desc: 'Vault 内存放 YYYYMM.md 月度文件的目录。仅处理当月文件。',
+        control: { type: 'folder', key: 'worklogDirectory', placeholder: 'Worklog' }
+      },
+      {
+        name: '复制普通 Markdown 内容',
+        desc: '复制有未完成任务的标题分支中的普通内容。',
+        control: { type: 'toggle', key: 'copyContent' }
+      },
+      {
+        name: '清理已迁项目',
+        desc: '删除内容已复制且不含需保留任务的历史二级标题；日期标题保留。',
+        control: { type: 'toggle', key: 'cleanEmptyHeadings' }
+      },
+      {
+        name: '保留顺延记录',
+        desc: '在历史标题下添加普通文本顺延记录。',
+        control: { type: 'toggle', key: 'historyRecords' }
+      },
+      {
+        name: '迁移前预览',
+        desc: '写入前显示任务数量和受影响文件，并等待确认。',
+        control: { type: 'toggle', key: 'preview' }
+      }
+    ];
   }
 }
